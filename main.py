@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QSlider,
     QStyle,
     QFrame,
+    QFileDialog,
 )
 from PyQt5.QtCore import Qt, QUrl, QTime, QTimer, QPoint, QSize
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
@@ -114,6 +115,15 @@ class ControlPanel(QFrame):
         self.volume_label.setFixedWidth(45)
         controls_layout.addWidget(self.volume_label)
 
+        # Add Open File button
+        self.open_file_button = QPushButton()
+        self.open_file_button.setIcon(
+            self.style().standardIcon(QStyle.SP_DialogOpenButton)
+        )
+        self.open_file_button.setFixedSize(32, 32)
+        self.open_file_button.setToolTip("Open Media File")
+        controls_layout.addWidget(self.open_file_button)
+
         layout.addLayout(controls_layout)
 
 
@@ -172,6 +182,7 @@ class MainWindow(QMainWindow):
         )
         self.control_panel.progress_slider.sliderMoved.connect(self.set_position)
         self.control_panel.volume_slider.valueChanged.connect(self.set_volume)
+        self.control_panel.open_file_button.clicked.connect(self.open_file)
 
         # Setup hide timer
         self.hide_timer = QTimer(self)
@@ -317,6 +328,26 @@ class MainWindow(QMainWindow):
             self.is_fullscreen = not self.is_fullscreen
             self.update_control_panel_position()
             event.accept()
+
+    def open_file(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Media File",
+            os.path.expanduser("~"),  # Start from user's home directory
+            "Media Files (*.mp4 *.avi *.mkv *.mov *.wmv);;All Files (*.*)",
+            options=options,
+        )
+        if file_name:
+            url = QUrl.fromLocalFile(os.path.abspath(file_name))
+            content = QMediaContent(url)
+            self.media_player.setMedia(content)
+            self.control_panel.play_button.setEnabled(True)
+            self.control_panel.backward_button.setEnabled(True)
+            self.control_panel.forward_button.setEnabled(True)
+            self.media_player.play()
+            self.update_play_button_icon()
 
 
 def main():
