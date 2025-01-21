@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Video Player")
         self.setGeometry(100, 100, 800, 600)
         self.setMouseTracking(True)
+        self.is_fullscreen = False
 
         # Create central widget and layout
         central_widget = QWidget()
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow):
         # Create video widget
         self.video_widget = QVideoWidget()
         self.video_widget.setMouseTracking(True)
+        self.video_widget.mouseDoubleClickEvent = self.toggle_fullscreen
         layout.addWidget(self.video_widget)
 
         # Create control panel as overlay
@@ -305,6 +307,16 @@ class MainWindow(QMainWindow):
                 self.start_hide_timer()
                 return True
         return super().eventFilter(obj, event)
+
+    def toggle_fullscreen(self, event):
+        if event.button() == Qt.LeftButton:
+            if not self.is_fullscreen:
+                self.setWindowState(self.windowState() | Qt.WindowFullScreen)
+            else:
+                self.setWindowState(self.windowState() & ~Qt.WindowFullScreen)
+            self.is_fullscreen = not self.is_fullscreen
+            self.update_control_panel_position()
+            event.accept()
 
 
 def main():
